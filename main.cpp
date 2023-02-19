@@ -1,22 +1,21 @@
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <string>
 #include <string.h>
+#include <ctype.h>
+#include <sstream>
 #include <vector>
 #include <unordered_set>
+#include "character_set.h"
 #include "Lex_Items.h"
-#define VALID_CHARACTER_SET                                                  \
-    {                                                                        \
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',                    \
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', \
-            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', \
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', \
-            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', \
-            '\'', '\"', '(', ')', ',', '-', ':', '=', '{', '}', '|'          \
-    }
 using namespace std;
 
+const unsigned int BUFFER_SIZE = 5096;
+const string FILE_NAME = "input.txt";
+
 unordered_set<char> MY_SET = VALID_CHARACTER_SET;
+vector<Lex_Item> LexicalVector;
 
 /* File IO in part borrowed from GNU coreutils
     Should in theory store
@@ -49,47 +48,118 @@ unordered_set<char> MY_SET = VALID_CHARACTER_SET;
     return lines;
 } */
 
-// Returns 0 if string input, 1 if file based input and -1 if error
-int errorHandler(int err)
-{
-    switch (err)
-    {
-    case -1:
-        cout << "Error: input length is zero" << endl;
-        return 0;
-    case -2:
-        cout << "Error: invalid input detected" << endl;
-        return 0;
-    default:
-        cout << "Unhandled Error" << endl;
-        return -1;
-    }
-}
+// Returns -1 if error, 0 if user enters M/m, 1 if user enters F/f
 int getInputType()
 {
     string str;
     cout << "Would you like to manually enter a string or use the provided input.txt file? (M: manual / F: file)" << endl;
     cin >> str;
 
-    if (str.length() == 0)
+    if (str.length() != 1)
     {
+        cerr << ("Invalid input length detected");
         return -1;
     }
-    str[0] = tolower(str[0]);
-    return (strcmp(str.c_str(), "m") != 0) ? (strcmp(str.c_str(), "f") != 0) ? -2 : 1 : 0;
+    const char chr = tolower(str[0]);
+    switch (chr)
+    {
+    case 'm':
+        return 0;
+        break;
+    case 'f':
+        return 1;
+        break;
+    default:
+        cout << "Invalid input detected";
+        return -1;
+    }
+
+    // return (strcmp(str.c_str(), "m") != 0) ? (strcmp(str.c_str(), "f") != 0) ? -2 : 1 : 0;
     //((str != "F" || str != "f") ? -1 : 1) : 1;
 }
 // Returns a string equal to the user input in console
 string getManualInput()
 {
-    return "Undefined";
+    string line, input;
+    cout << "Type ctrl-D to enter input for lexical analysis" << endl;
+    while (cin >> line)
+    {
+        input += line;
+    }
+    return input;
 }
 // Returns a string equal to the contents of input.txt
 string getFileInput()
 {
-    return "Undefined";
+    int buffer;
+    char c;
+    string word, type;
+    string line;
+    string input;
+    // string tokens[];
+    ifstream inFile(FILE_NAME);
+    if (!inFile.is_open())
+        throw invalid_argument("Cant open file.");
+
+    getline(inFile, line);
+    // tokenParser(line);
+    /* while (getline(inFile, line))
+    {
+        cout << "Parsing line: " << line << endl;
+        tokenParser(line);
+    } */
+
+    return line;
 }
-int main()
+
+/* Given the first character of word, return what lexical type it is
+Note: If first letter is capital, it could also be a reserved word */
+
+LexType determineWordType(char c)
+{
+    if (isupper(c))
+        return TypeRef;
+    if (islower(c))
+        return Identifier;
+    if (isdigit(c))
+        return Number;
+    else
+        switch (c)
+        {
+        case '{':
+        case '}':
+        case '(':
+        case ')':
+        case ',':
+            return RangeSeparator;
+        case ':':
+            return Assign;
+        }
+}
+int tokenParser(string str)
+{
+    string word;
+    LexType type;
+    // stringstream input(str);
+    char c;
+    Lex_Item item;
+    for (int i = 0; i <= str.length(); i++)
+    {
+        if (i == 0)
+        {
+            type = determineWordType(str[0]);
+        }
+        if (isspace(c))
+        {
+            // reset word
+
+            i = 0;
+        }
+        else if (is)
+    }
+    return 0;
+}
+int getInputCode()
 {
     int inType = getInputType();
     while (inType < 0)
@@ -97,8 +167,29 @@ int main()
         cout << errorHandler(inType) << endl;
         inType = getInputType();
     }
-    const string input = inType == 0 ? getManualInput() : getFileInput();
+    switch (inType)
+    {
+    case 0:
+        tokenParser(getManualInput());
+        return 0;
+    case 1:
+        tokenParser(getFileInput());
+        return 0;
+    default:
+        throw invalid_argument("Unexpected value of int inType");
+    }
+}
 
+int Runner()
+{
+    return 0;
+}
+int main()
+{
+
+    const string input = getInputCode();
+    cout << "Read input: " << endl
+         << input << endl;
     char lexInputToken;
     vector<Lex_Item> tokenVec;
     return 0;

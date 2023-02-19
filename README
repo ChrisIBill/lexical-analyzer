@@ -1,0 +1,15 @@
+Lex_Item
+Lex_Items = <>
+while input    
+    word = Read input in until whitespace
+        use first char to determine if token type is
+            type reference, Range_Separator, Assignment, L or RCurly, comma, L or R paren, identifier or Number
+            (if type ref, will need to check later if it is a reserved word instead)
+    Lex_Item = (word, wordtype)
+        if wordtype is typeRef
+            check against ReservedWords and if match found reset type to ReservedWord
+        if word is valid for type
+            
+
+    Lex_items push (word, wordtype)
+        if 
