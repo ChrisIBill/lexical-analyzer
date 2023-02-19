@@ -16,14 +16,16 @@
 enum LexType
 {
     ReservedWord,
-    Range_Separator,
+    RangeSeparator,
     Assign,
-    LCurly,
+    TypeRef,
+    Identifier,
+    Number,
+    Error
+};
+
+/* LCurly,
     RCurly,
     Comma,
     LParen,
-    RParen,
-    TypeRef,
-    Identifier,
-    Number
-};
+    RParen, */

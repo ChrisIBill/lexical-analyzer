@@ -134,6 +134,8 @@ LexType determineWordType(char c)
             return RangeSeparator;
         case ':':
             return Assign;
+        default:
+            return Error;
         }
 }
 int tokenParser(string str)
@@ -155,7 +157,6 @@ int tokenParser(string str)
 
             i = 0;
         }
-        else if (is)
     }
     return 0;
 }
@@ -164,7 +165,6 @@ int getInputCode()
     int inType = getInputType();
     while (inType < 0)
     {
-        cout << errorHandler(inType) << endl;
         inType = getInputType();
     }
     switch (inType)
@@ -187,9 +187,9 @@ int Runner()
 int main()
 {
 
-    const string input = getInputCode();
-    cout << "Read input: " << endl
-         << input << endl;
+    getInputCode();
+    /* cout << "Read input: " << endl
+         << input << endl; */
     char lexInputToken;
     vector<Lex_Item> tokenVec;
     return 0;
