@@ -20,6 +20,31 @@ std::unordered_map<std::string, std::type_index> Lex_Type_Set = {
     {"Identifier", typeid(std::string)},
     {"Number", typeid(std::string)},
 };
+// ReservedWord, Range_Separator, Assign,LCurly, RCurly, Comma, LParen, RParen, TypeRef, Identifier, Number
+const std::string LEX_TYPES[] = {
+    "Undefined",
+    "ReservedWord",
+    "RangeSeparator",
+    "Assign",
+    "TypeRef",
+    "Identifier",
+    "Number",
+    "Space",
+    "NewLine",
+    "Error"};
+enum LexType
+{
+    Undefined,
+    ReservedWord,
+    RangeSeparator,
+    Assign,
+    TypeRef,
+    Identifier,
+    Number,
+    Space,
+    NewLine,
+    Error
+};
 
 int errorHandler(std::string str)
 {
@@ -37,76 +62,156 @@ typedef struct Node
     struct Node *zeroInput = NULL;
     struct Node *oneInput = NULL;
 } State;
-class Lex_Item //(string: lexType, string: item)
+class Lex_Token //(string: lexType, string: item)
 {
-    std::string lexType, lexItem;
+    LexType lexType;
+    std::string lexItem;
     // T item; // item is of whatever type is passed on Lex_Items<type> myItem (lexType, item)
     //  std::type_index itemType;
     //   Lex_Items *assigned; // Do i need a pointer to assignments?
 public:
-    Lex_Item()
+    Lex_Token()
     {
-        lexType = "Undefined";
+        lexType = Undefined;
         lexItem = "Undefined";
         // itemType = typeid(void);
     }
-    /* Lex_Item(std::string lexType, std::string item)
+
+    int setLexType(LexType type)
     {
-        this->lexType = lexType;
-        this->item = item;
+        if (type == Error || Undefined)
+        {
+            std::cerr << "Error: Error or undefined type in type set";
+            this->lexType = type;
+            return -1;
+        }
+        this->lexType = type;
+        return 0;
     }
-    Lex_Item(std::string lexType, std::string item, std::type_index type)
+
+    int setLexItem(std::string str)
     {
-        if (Lex_Type_Set.count(lexType))
+        bool isValid = false;
+        if (this->lexType == Error || this->lexType == Undefined)
         {
-            if (Lex_Type_Set.at(lexType) == type)
-            {
-                this->lexType = lexType;
-                this->item = item;
-            }
-            else
-            {
-                throw std::runtime_error("ERROR: IMPROPER TYPE DETECTED IN CLASS Lex_Items.");
-            }
+            std::cerr << "Error: cant assign item with this type " << lexType;
+            return -1;
         }
-        else
+        std::cout << "Checking lexical word " << str << " for validity as type " << lexType << std::endl;
+        switch (lexType)
         {
-            throw std::runtime_error("ERROR: IMPROPER TYPE DETECTED IN CLASS Lex_Items.");
+        case ReservedWord:
+            // Shouldnt need to check
+            std::cerr << "Hit case reserved word for some reason in Lex_Items.h setLexItems";
+            isValid = true;
+            break;
+        case RangeSeparator:
+            // Shouldnt need to check
+            isValid = true;
+            break;
+        case Assign:
+            isValid = checkAssign(str);
+            break;
+        case TypeRef:
+            if (Reserved_Words.count(str))
+            {
+                std::cout << "Reserved word detected" << std::endl;
+                isValid = true;
+                this->lexType = ReservedWord;
+                break;
+            }
+        case Identifier:
+            isValid = checkTypeRefOrIdentifier(str);
+            break;
+        case Number:
+            isValid = checkNumber(str);
         }
-    } */
-    int setLexType(std::string str)
-    {
-        if (Lex_Type_Set.count(str))
+        std::cout << "isValid?: " << isValid << std::endl;
+        if (isValid)
         {
-            // if there is a key "str" on map Lex_Type_Set
-            this->lexType = str;
+            this->lexItem = str;
             return 0;
         }
         else
-        {
-            std::cout << "ERROR: IMPROPER TYPE DETECTED IN CLASS Lex_Items." << std::endl;
             return -1;
-        }
     }
-
-    int setItem(std::string str)
+    bool checkReservedWord(std::string str)
     {
-        for (auto &ch : str)
+        if (Reserved_Words.count(str))
         {
-        }
-    }
-    int setLexItem(std::string type, std::string item)
-    {
-        if (Lex_Type_Set.count(type))
-        {
-            // if there is a key "str" on map Lex_Type_Set
-            this->lexType = type;
+            this->lexType = ReservedWord;
+            return true;
         }
         else
+            return false;
+    }
+    int checkRangeSep(std::string str)
+    {
+        // Shouldnt need to check range
+    }
+    bool checkAssign(std::string str)
+    {
+        if (str == "::=")
         {
-            std::cerr << "Error: Unexpected Lex Type provided while setting Lexical Item";
+            return true;
+        }
+        return false;
+    }
+    bool checkTypeRefOrIdentifier(std::string str)
+    {
+        bool prevHyphen = false;
+        // Need to check if correct type has been applied
+        if (str.back() == '-')
+        {
             return -1;
         }
-        return 0;
+        for (char &c : str)
+        {
+            if (!isalnum(c))
+            {
+                if (c != '-')
+                {
+                    return false;
+                }
+                else
+                {
+                    // Could also just check next char for hyphen here as well
+                    prevHyphen = true;
+                }
+            }
+            else
+            {
+                prevHyphen = false;
+            }
+        }
+        return true;
+    }
+    bool checkIdentifier(std::string str)
+    {
+    }
+    bool checkNumber(std::string str)
+    {
+        if (str.size() > 1)
+        {
+            if (str[0] == '0')
+            {
+                std::cerr << "Error: Number other than 0 cannot start with 0";
+                return false;
+            }
+        }
+        for (char &c : str)
+        {
+            if (!isdigit(c))
+            {
+                std::cerr << "Non-numeric character " << c << " detected in Number " << str;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void printLexToken()
+    {
+        std::cout << this->lexItem << "(" << LEX_TYPES[this->lexType] << ")" << std::endl;
     }
 };

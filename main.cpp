@@ -12,11 +12,13 @@
 using namespace std;
 
 const unsigned int BUFFER_SIZE = 5096;
-const string FILE_NAME = "input.txt";
+const string FILE_NAME = "testInput.txt";
 
 unordered_set<char> MY_SET = VALID_CHARACTER_SET;
-vector<Lex_Item> LexicalVector;
 
+vector<Lex_Token> LexicalVector;
+
+int tokenParser(string);
 /* File IO in part borrowed from GNU coreutils
     Should in theory store
 */
@@ -101,7 +103,10 @@ string getFileInput()
     if (!inFile.is_open())
         throw invalid_argument("Cant open file.");
 
-    getline(inFile, line);
+    while (getline(inFile, line))
+    {
+        tokenParser(line);
+    }
     // tokenParser(line);
     /* while (getline(inFile, line))
     {
@@ -114,7 +119,6 @@ string getFileInput()
 
 /* Given the first character of word, return what lexical type it is
 Note: If first letter is capital, it could also be a reserved word */
-
 LexType determineWordType(char c)
 {
     if (isupper(c))
@@ -135,28 +139,88 @@ LexType determineWordType(char c)
         case ':':
             return Assign;
         default:
+            cout << "Error assigning type" << endl;
             return Error;
         }
 }
 int tokenParser(string str)
 {
     string word;
-    LexType type;
+    LexType type = Undefined;
     // stringstream input(str);
     char c;
-    Lex_Item item;
-    for (int i = 0; i <= str.length(); i++)
+    Lex_Token token;
+    bool isNewLine = false, isNewToken = true;
+
+    cout << "Parsing string: " << str << endl;
+    for (string::size_type i = 0; i < str.size(); i++)
     {
-        if (i == 0)
-        {
-            type = determineWordType(str[0]);
-        }
+        const unsigned char &c = str[i];
+        cout << "Handling char " << c << " ASCII Code: " << int(c) << endl;
         if (isspace(c))
         {
-            // reset word
-
-            i = 0;
+            if (!word.empty())
+            {
+                if (type != Undefined)
+                {
+                    cout << "Entering word " << word << " into token" << endl;
+                    token.setLexItem(word);
+                    // cout << "Entering token into Lexical Vector" << endl;
+                    LexicalVector.push_back(token);
+                    word.clear();
+                    token = Lex_Token();
+                }
+                else
+                {
+                    cout << "Error: Undefined type for word " << word << endl;
+                }
+            }
+            else
+            {
+                cout << "If theres a word here... problem: " << word << endl;
+            }
+            string::size_type j = i;
+            char &cj = str[i];
+            while (i < str.size() && isspace(cj))
+            {
+                if (cj == '\n' || cj == '\v' || cj == '\f')
+                {
+                    cout << "New Line detected" << endl;
+                    isNewLine = true;
+                }
+                i++;
+                cj = str[i];
+            }
+            i--;
+            isNewToken = true;
         }
+        else if (isNewToken == true)
+        {
+            word += c;
+            type = determineWordType(c);
+            token.setLexType(type);
+            if (type == RangeSeparator || type == Undefined || type == Error)
+            {
+                token.setLexItem(word);
+                LexicalVector.push_back(token);
+                word.clear();
+                token = Lex_Token();
+            }
+
+            isNewToken = false;
+        }
+        else
+        {
+            word += c;
+        }
+    }
+    if (!word.empty())
+    {
+        cout << "Entering word " << word << " into token" << endl;
+        token.setLexItem(word);
+        LexicalVector.push_back(token);
+        word.clear();
+        token = Lex_Token();
     }
     return 0;
 }
@@ -173,7 +237,7 @@ int getInputCode()
         tokenParser(getManualInput());
         return 0;
     case 1:
-        tokenParser(getFileInput());
+        getFileInput();
         return 0;
     default:
         throw invalid_argument("Unexpected value of int inType");
@@ -186,11 +250,14 @@ int Runner()
 }
 int main()
 {
-
     getInputCode();
+    for (Lex_Token i : LexicalVector)
+    {
+        i.printLexToken();
+    }
     /* cout << "Read input: " << endl
          << input << endl; */
     char lexInputToken;
-    vector<Lex_Item> tokenVec;
+    vector<Lex_Token> tokenVec;
     return 0;
 }

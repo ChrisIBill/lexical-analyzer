@@ -1,8 +1,8 @@
 MyShopPurchaseOrders   TAGS   ::=   BEGIN
 
 PurchaseOrder ::= SEQUENCE {
-dateOfOrder DATE,
-customer    CustomerInfo,
+dateOfOrder DATE ,
+customer    CustomerInfo ,
 items       ListOfItems
 }
 

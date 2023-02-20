@@ -12,17 +12,6 @@
     {                                                         \
         "TAGS", "BEGIN", "SEQUENCE", "INTEGER", "DATE", "END" \
     }
-// ReservedWord, Range_Separator, Assign,LCurly, RCurly, Comma, LParen, RParen, TypeRef, Identifier, Number
-enum LexType
-{
-    ReservedWord,
-    RangeSeparator,
-    Assign,
-    TypeRef,
-    Identifier,
-    Number,
-    Error
-};
 
 /* LCurly,
     RCurly,
