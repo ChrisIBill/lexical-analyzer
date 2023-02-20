@@ -7,19 +7,7 @@
 
 // Map of all possible lexical token types, and the type they will be converted to
 std::unordered_set<std::string> Reserved_Words = RESERVED_WORDS;
-std::unordered_map<std::string, std::type_index> Lex_Type_Set = {
-    {"ReservedWord", typeid(std::string)},
-    {"Range_Separator", typeid(std::string)},
-    {"ASSIGN", typeid(std::string)},
-    {"LCURLY", typeid(char)},
-    {"RCURLY", typeid(char)},
-    {"COMMA", typeid(char)},
-    {"LPAREN", typeid(char)},
-    {"RPAREN", typeid(char)},
-    {"TypeRef", typeid(std::string)},
-    {"Identifier", typeid(std::string)},
-    {"Number", typeid(std::string)},
-};
+
 // ReservedWord, Range_Separator, Assign,LCurly, RCurly, Comma, LParen, RParen, TypeRef, Identifier, Number
 const std::string LEX_TYPES[] = {
     "Undefined",
@@ -29,6 +17,12 @@ const std::string LEX_TYPES[] = {
     "TypeRef",
     "Identifier",
     "Number",
+    "LCurly",
+    "RCurly",
+    "Comma",
+    "LParen",
+    "RParen",
+    "Misc",
     "Space",
     "NewLine",
     "Error"};
@@ -41,6 +35,12 @@ enum LexType
     TypeRef,
     Identifier,
     Number,
+    LCurly,
+    RCurly,
+    Comma,
+    LParen,
+    RParen,
+    Misc,
     Space,
     NewLine,
     Error
@@ -53,22 +53,11 @@ int errorHandler(std::string str)
 
 template <typename TN>
 std::string type_name();
-
-// template <class T> Would allow for variable types
-typedef struct Node
-{
-    std::string name;
-    bool isFinal = 0;
-    struct Node *zeroInput = NULL;
-    struct Node *oneInput = NULL;
-} State;
 class Lex_Token //(string: lexType, string: item)
 {
     LexType lexType;
     std::string lexItem;
-    // T item; // item is of whatever type is passed on Lex_Items<type> myItem (lexType, item)
-    //  std::type_index itemType;
-    //   Lex_Items *assigned; // Do i need a pointer to assignments?
+
 public:
     Lex_Token()
     {
@@ -106,8 +95,8 @@ public:
             isValid = true;
             break;
         case RangeSeparator:
-            // Shouldnt need to check
-            isValid = true;
+            std::cout << "Checking range sep" << std::endl;
+            isValid = checkRangeSep(str);
             break;
         case Assign:
             isValid = checkAssign(str);
@@ -125,6 +114,17 @@ public:
             break;
         case Number:
             isValid = checkNumber(str);
+            break;
+        case LCurly:
+        case RCurly:
+        case Comma:
+        case LParen:
+        case RParen:
+            isValid = checkParens(str);
+            break;
+        case Misc:
+            isValid = checkMisc(str);
+            break;
         }
         std::cout << "isValid?: " << isValid << std::endl;
         if (isValid)
@@ -133,7 +133,11 @@ public:
             return 0;
         }
         else
+        {
+            this->lexItem = str;
+            this->lexType = Error;
             return -1;
+        }
     }
     bool checkReservedWord(std::string str)
     {
@@ -145,9 +149,13 @@ public:
         else
             return false;
     }
-    int checkRangeSep(std::string str)
+    bool checkRangeSep(std::string str)
     {
-        // Shouldnt need to check range
+        if (str == "..")
+        {
+            return true;
+        }
+        return false;
     }
     bool checkAssign(std::string str)
     {
@@ -160,7 +168,6 @@ public:
     bool checkTypeRefOrIdentifier(std::string str)
     {
         bool prevHyphen = false;
-        // Need to check if correct type has been applied
         if (str.back() == '-')
         {
             return -1;
@@ -169,14 +176,10 @@ public:
         {
             if (!isalnum(c))
             {
-                if (c != '-')
+                if (c != '-' && c != '.')
                 {
+                    std::cout << "Failing char: " << c << std::endl;
                     return false;
-                }
-                else
-                {
-                    // Could also just check next char for hyphen here as well
-                    prevHyphen = true;
                 }
             }
             else
@@ -185,9 +188,6 @@ public:
             }
         }
         return true;
-    }
-    bool checkIdentifier(std::string str)
-    {
     }
     bool checkNumber(std::string str)
     {
@@ -209,7 +209,30 @@ public:
         }
         return true;
     }
-
+    bool checkParens(std::string str)
+    {
+        if (str.length() > 1)
+        {
+            std::cout << "Error: size of parens shouldnt be greater than 1" << std::endl;
+            return false;
+        }
+        return true;
+    }
+    bool checkMisc(std::string str)
+    {
+        const char &c = str[0];
+        if (str.size() > 1)
+        {
+            std::cout << "Error: size of misc shouldnt be greater than 1" << std::endl;
+            return false;
+        }
+        else if (c == '"' || c == '|' || c == '=')
+        {
+            return true;
+        }
+        else
+            return false;
+    }
     void printLexToken()
     {
         std::cout << this->lexItem << "(" << LEX_TYPES[this->lexType] << ")" << std::endl;

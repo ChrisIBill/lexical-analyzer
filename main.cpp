@@ -12,9 +12,9 @@
 using namespace std;
 
 const unsigned int BUFFER_SIZE = 5096;
-const string FILE_NAME = "testInput.txt";
+const string FILE_NAME = "input.txt";
 
-unordered_set<char> MY_SET = VALID_CHARACTER_SET;
+unordered_set<char> Valid_Characters = VALID_CHARACTER_SET;
 
 vector<Lex_Token> LexicalVector;
 
@@ -131,16 +131,21 @@ LexType determineWordType(char c)
         switch (c)
         {
         case '{':
+            return LCurly;
         case '}':
+            return RCurly;
         case '(':
+            return LParen;
         case ')':
+            return RParen;
         case ',':
+            return Comma;
+        case '.':
             return RangeSeparator;
         case ':':
             return Assign;
         default:
-            cout << "Error assigning type" << endl;
-            return Error;
+            return Misc;
         }
 }
 int tokenParser(string str)
@@ -156,7 +161,11 @@ int tokenParser(string str)
     for (string::size_type i = 0; i < str.size(); i++)
     {
         const unsigned char &c = str[i];
-        cout << "Handling char " << c << " ASCII Code: " << int(c) << endl;
+        if (!Valid_Characters.count(c))
+        {
+            cout << "Character " << c << " with ASCII code " << (int)c << " is not valid." << endl;
+            continue;
+        }
         if (isspace(c))
         {
             if (!word.empty())
@@ -174,10 +183,6 @@ int tokenParser(string str)
                 {
                     cout << "Error: Undefined type for word " << word << endl;
                 }
-            }
-            else
-            {
-                cout << "If theres a word here... problem: " << word << endl;
             }
             string::size_type j = i;
             char &cj = str[i];
@@ -199,7 +204,7 @@ int tokenParser(string str)
             word += c;
             type = determineWordType(c);
             token.setLexType(type);
-            if (type == RangeSeparator || type == Undefined || type == Error)
+            if (type == Misc || type == Undefined || type == Error || type == RCurly || type == LCurly || type == Comma || type == LParen || type == RParen)
             {
                 token.setLexItem(word);
                 LexicalVector.push_back(token);
